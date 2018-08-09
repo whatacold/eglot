@@ -28,6 +28,7 @@ for the language of your choice. Otherwise, it prompts you to enter one:
 * Rust's [rls][rls]
 * Python's [pyls][pyls]
 * Ruby's [solargraph][solargraph]
+* Java's [Eclipse JDT Language Server][eclipse-jdt]
 * Bash's [bash-language-server][bash-language-server]
 * PHP's [php-language-server][php-language-server]
 * C/C++'s [cquery][cquery]
@@ -291,4 +292,5 @@ Under the hood:
 [haskell-ide-engine]: https://github.com/haskell/haskell-ide-engine
 [kotlin-language-server]: https://github.com/fwcd/KotlinLanguageServer
 [go-langserver]: https://github.com/sourcegraph/go-langserver
+[eclipse-jdt]: https://github.com/eclipse/eclipse.jdt.ls
 
