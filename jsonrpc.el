@@ -376,6 +376,10 @@ connection object, called when the process dies .")
     (set-process-filter proc #'jsonrpc--process-filter)
     (set-process-sentinel proc #'jsonrpc--process-sentinel)
     (with-current-buffer (process-buffer proc)
+      (when (eq 'no-conversion
+                (car (process-coding-system proc)))
+        (set-buffer-multibyte nil)
+        (set-buffer-file-coding-system 'no-conversion))
       (set-marker (process-mark proc) (point-min))
       (let ((inhibit-read-only t)) (erase-buffer) (read-only-mode t) proc))
     (process-put proc 'jsonrpc-connection conn)))
@@ -441,16 +445,19 @@ With optional CLEANUP, kill any associated buffers. "
 ;;;
 (define-error 'jsonrpc-error "jsonrpc-error")
 
-(defun jsonrpc--json-read ()
+(defun jsonrpc--json-read (decoding-coding-system)
   "Read JSON object in buffer, move point to end of buffer."
   ;; TODO: I guess we can make these macros if/when jsonrpc.el
   ;; goes into Emacs core.
+
   (cond ((fboundp 'json-parse-buffer) (json-parse-buffer
                                        :object-type 'plist
                                        :null-object nil
                                        :false-object :json-false))
         (t                            (let ((json-object-type 'plist))
-                                        (json-read)))))
+                                        (json-read-from-string
+                                         (decode-coding-string (buffer-string)
+                                                               decoding-coding-system))))))
 
 (defun jsonrpc--json-encode (object)
   "Encode OBJECT into a JSON string."
@@ -544,7 +551,7 @@ With optional CLEANUP, kill any associated buffers. "
                               (narrow-to-region (point) message-end)
                               (let* ((json-message
                                       (condition-case-unless-debug oops
-                                          (jsonrpc--json-read)
+                                          (jsonrpc--json-read (process-get proc 'eglot-project-coding-system))
                                         (error
                                          (jsonrpc--warn "Invalid JSON: %s %s"
                                                         (cdr oops) (buffer-string))

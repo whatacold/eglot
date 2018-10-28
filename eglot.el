@@ -171,6 +171,11 @@ let the buffer grow forever."
   :type '(choice (const :tag "No limit" nil)
                  (integer :tag "Number of characters")))
 
+(defcustom eglot-project-coding-system 'utf-8-emacs-unix
+  "The coding system used for project source code files."
+  :type 'symbol)
+(make-variable-buffer-local 'eglot-project-coding-system)
+
 ;;; API (WORK-IN-PROGRESS!)
 ;;;
 (cl-defmacro eglot--with-live-buffer (buf &rest body)
@@ -522,7 +527,7 @@ This docstring appeases checkdoc, that's all."
                                 :name readable-name
                                 :command contact
                                 :connection-type 'pipe
-                                :coding 'utf-8-emacs-unix
+                                :coding '(no-conversion . utf-8-emacs-unix)
                                 :noquery t
                                 :stderr (get-buffer-create
                                          (format "*%s stderr*" readable-name))))))))
@@ -546,6 +551,10 @@ This docstring appeases checkdoc, that's all."
     (setf (eglot--project-nickname server) nickname)
     (setf (eglot--major-mode server) managed-major-mode)
     (setf (eglot--inferior-process server) autostart-inferior-process)
+    (when (eq 'real
+              (process-type (jsonrpc--process server)))
+      (process-put (jsonrpc--process server) 'eglot-project-coding-system
+                   eglot-project-coding-system))
     ;; Now start the handshake.  To honour `eglot-sync-connect'
     ;; maybe-sync-maybe-async semantics we use `jsonrpc-async-request'
     ;; and mimic most of `jsonrpc-request'.
